@@ -2,7 +2,11 @@
 #
 # Check https://circleci.com/docs/2.0/language-java/ for more details
 ###
-version: 2
+version: 2.1
+orbs:
+  aws-ecr: circleci/aws-ecr@6.7.0
+
+
 jobs:
   build:
     docker:
@@ -34,15 +38,15 @@ jobs:
       - persist_to_workspace:
           root: /tmp/workspace
           paths: .
-  docker-image-and-publish:
-    machine: true
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - run: ls -a /tmp/workspace
-      - run:
-          name: Create Docker image and push to Docker hub
-          command: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 289073749577.dkr.ecr.us-east-1.amazonaws.com && docker build -t ticketing-app  /home/circleci/project/Dockefile && docker push 289073749577.dkr.ecr.us-east-1.amazonaws.com/ticketing-app:latest
+#  docker-image-and-publish:
+#    machine: true
+#    steps:
+#      - attach_workspace:
+#          at: /tmp/workspace
+#      - run: ls -a /tmp/workspace
+#      - run:
+#          name: Create Docker image and push to Docker hub
+#          command: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 289073749577.dkr.ecr.us-east-1.amazonaws.com && docker build -t ticketing-app   && docker push 289073749577.dkr.ecr.us-east-1.amazonaws.com/ticketing-app:latest
   deploy-job:
     docker:
       #specify the version you desire here
@@ -55,13 +59,25 @@ jobs:
             /bin/bash bin/deploy_image.sh
             docker ps
 workflows:
-  version: 2
-  build_and_test:
+  build_and_push_image:
     jobs:
-      - build
-      - docker-image-and-publish:
-          requires:
-            - build
-      - deploy-job:
-          requires:
-            - docker-image-and-publish
+      - aws-ecr/build-and-push-image:
+          account-url: AWS_ECR_ACCOUNT_URL
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          create-repo: true
+          dockerfile: Dockerfile
+          path: .
+          region: AWS_REGION
+          repo: circleci-ecr-orb-demo
+          tag: "$CIRCLE_SHA1"
+
+#  build_and_test:
+#    jobs:
+#      - build
+#      - docker-image-and-publish:
+#          requires:
+#            - build
+#      - deploy-job:
+#          requires:
+#            - docker-image-and-publish
