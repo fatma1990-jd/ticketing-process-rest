@@ -37,12 +37,12 @@ jobs:
   docker-image-and-publish:
     machine: true
     steps:
-#      - attach_workspace:
-#          at: /tmp/workspace
-#      - run: ls -a /tmp/workspace
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: ls -a /tmp/workspace
       - run:
           name: Create Docker image and push to Docker hub
-          command: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 289073749577.dkr.ecr.us-east-1.amazonaws.com && docker build -t ticketing-app --file ./Dockefile . && docker push 289073749577.dkr.ecr.us-east-1.amazonaws.com/ticketing-app:latest
+          command: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 289073749577.dkr.ecr.us-east-1.amazonaws.com && docker build -t ticketing-app  /home/circleci/project/Dockefile && docker push 289073749577.dkr.ecr.us-east-1.amazonaws.com/ticketing-app:latest
   deploy-job:
     docker:
       #specify the version you desire here
